@@ -1,0 +1,18 @@
+{
+  "name": "react-native-canvas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "babel-node glTest.js --presets latest > image.ppm",
+    "start": "watchify browserTest.js -t babelify -o bundle.js -v&http-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-preset-latest": "^6.16.0",
+    "babelify": "^7.3.0",
+    "gl": "^4.0.2",
+    "http-server": "^0.9.0"
+  }
+}

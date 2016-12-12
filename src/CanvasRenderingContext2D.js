@@ -12,6 +12,12 @@ export default class CanvasRenderingContext2D {
     this.primitiveShader = new PrimitiveShader(gl);
     this.gl = gl;
 
+    this.fillStyle = 0; // default black
+    this.strokeStyle = 0; // default black
+
+    // CanvasPathDrawingStyles
+    this.lineWidth = 1; // default 1
+
     // Begin Setup
     gl.enable(gl.BLEND)
     gl.disable(gl.DEPTH_TEST)
@@ -37,10 +43,17 @@ export default class CanvasRenderingContext2D {
   // interface CanvasRect
   fillRect(x, y, width, height) {
     var rectangle = new Graphics();
-    rectangle.beginFill(0x66CCFF);
-    rectangle.lineStyle(4, 0xFF3300, 1);
+    rectangle.beginFill(this.fillStyle);
     rectangle.drawRect(x, y, width, height);
     rectangle.endFill();
+
+    this._render(rectangle);
+  }
+
+  strokeRect(x, y, width, height) {
+    var rectangle = new Graphics();
+    rectangle.lineStyle(this.lineWidth, this.strokeStyle);
+    rectangle.drawRect(x, y, width, height);
 
     this._render(rectangle);
   }

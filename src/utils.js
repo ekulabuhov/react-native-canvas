@@ -1,3 +1,11 @@
+var parse = require('parse-color');
+
+export function cssColor2rgb(cssColor)
+{
+	return parse(cssColor).rgb;
+}
+
+
 /**
  * Converts a hex color number to an [R, G, B] array
  *

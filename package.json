@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "babel-node glTest.js --presets latest > image.ppm",
+    "test": "mocha --require babel-register",
     "start": "watchify browserTest.js -t babelify -o bundle.js -v&http-server"
   },
   "author": "",
@@ -12,7 +12,12 @@
   "devDependencies": {
     "babel-preset-latest": "^6.16.0",
     "babelify": "^7.3.0",
+    "chai": "^3.5.0",
     "gl": "^4.0.2",
-    "http-server": "^0.9.0"
+    "http-server": "^0.9.0",
+    "mocha": "^3.2.0"
+  },
+  "dependencies": {
+    "parse-color": "^1.0.0"
   }
 }

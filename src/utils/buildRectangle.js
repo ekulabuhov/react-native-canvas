@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { hex2rgb } from '../utils';
+import { cssColor2rgb } from '../utils';
 
 /**
  * Builds a rectangle to draw
@@ -24,7 +24,7 @@ export default function buildRectangle(graphicsData, webGLData)
 
     if (graphicsData.fill)
     {
-        const color = hex2rgb(graphicsData.fillColor);
+        const color = cssColor2rgb(graphicsData.fillColor);
         const alpha = graphicsData.fillAlpha;
 
         const r = color[0] * alpha;

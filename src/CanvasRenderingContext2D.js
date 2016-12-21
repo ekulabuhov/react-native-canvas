@@ -1,5 +1,6 @@
 import Graphics from './Graphics'
 import buildRectangle from './utils/buildRectangle';
+import buildPoly from './utils/buildPoly';
 import WebGLGraphicsData from './WebGLGraphicsData';
 import PrimitiveShader from './PrimitiveShader';
 import { SHAPES } from './const';
@@ -12,11 +13,15 @@ export default class CanvasRenderingContext2D {
     this.primitiveShader = new PrimitiveShader(gl);
     this.gl = gl;
 
-    this.fillStyle = 0; // default black
-    this.strokeStyle = 0; // default black
+    this.fillStyle = '#000'; // default black
+    this.strokeStyle = '#000'; // default black
 
     // CanvasPathDrawingStyles
     this.lineWidth = 1; // default 1
+
+    this._children = [];
+
+    this.subpaths = [];
 
     // Begin Setup
     gl.enable(gl.BLEND)
@@ -47,53 +52,176 @@ export default class CanvasRenderingContext2D {
     rectangle.drawRect(x, y, width, height);
     rectangle.endFill();
 
-    this._render(rectangle);
+    this._uploadData(rectangle);
+    this._render();
   }
 
   strokeRect(x, y, width, height) {
     var rectangle = new Graphics();
     rectangle.lineStyle(this.lineWidth, this.strokeStyle);
     rectangle.drawRect(x, y, width, height);
-
-    this._render(rectangle);
+    
+    this._uploadData(rectangle);
+    this._render();
   }
 
-  _render(graphics) {
+  clearRect(x, y, width, height) {
     const gl = this.gl;
-    const data = graphics.graphicsData[0];
-    
-    gl.clearColor(0, 0, 0, 1); // rgba - black
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    let webGLData;
+    //gl.scissor(x, y, width, height);
 
-    if (data.type === SHAPES.RECT) {
-      webGLData = new WebGLGraphicsData(gl, this.primitiveShader);
-      buildRectangle(data, webGLData);
+    gl.clear( gl.COLOR_BUFFER_BIT );
+  }
+
+  rect(x, y, width, height) {
+    this.subpaths.push([x,y, x+width,y, x+width,y+height, x,y+height])
+  }
+
+  _fillOrStroke(op) {
+    if (this.subpaths.length == 0) {
+      return;
     }
+
+    var graphics = new Graphics();
+
+    if (op == 'fill') {
+      graphics.beginFill(this.fillStyle);
+    } else {
+      graphics.lineStyle(this.lineWidth, this.strokeStyle);
+    }
+
+    this.subpaths.forEach((subpath) => {
+      graphics.drawPolygon(subpath);
+    })
+
+    graphics.endFill();
+
+    this._uploadData(graphics);
+    this._render();
+  }
+
+  fill() {
+    this._fillOrStroke('fill');
+  }
+
+  stroke() {
+    this._fillOrStroke('stroke');
+  }
+
+  closePath() {
+
+  }
+
+  beginPath() {
+    this.subpaths = [];
+  }
+
+  moveTo(x, y) {
+    this.subpaths.push([x, y]);
+  }
+
+  lineTo(x, y) {
+    this.subpaths[this.subpaths.length-1].push(x, y);
+  }
+
+  arc(x, y, radius, startAngle, endAngle, anticlockwise) {
+    if (startAngle == endAngle) {
+      return;
+    }
+
+    let totalSegs = Math.floor(30 * Math.sqrt(radius));
+    let fullCircle;
+
+    if ((endAngle > startAngle + 2 * Math.PI) && !anticlockwise) {
+      fullCircle = true;
+    }
+
+    if ((startAngle > endAngle + 2 * Math.PI) && anticlockwise) {
+      fullCircle = true;
+    }
+
+    // make sure parameters are in range
+    startAngle = startAngle % (Math.PI * 2);
+    endAngle = endAngle % (Math.PI * 2);
+
+    if (fullCircle) {
+      if (anticlockwise) {
+        startAngle += 2 * Math.PI;
+      } else {
+        endAngle += 2 * Math.PI;
+      }
+    }
+
+    // I don't like to work with negative values
+    if (startAngle < 0 || endAngle < 0) {
+      startAngle += 2 * Math.PI;
+      endAngle += 2 * Math.PI;
+    }
+
+    if (anticlockwise && endAngle > startAngle) {
+      endAngle = 2 * Math.PI - endAngle;
+    }
+
+    var delta = Math.abs(endAngle - startAngle) / totalSegs;
+
+    if (anticlockwise) {
+      delta = -delta;
+    }
+
+    if (!this.subpaths.length) {
+      this.subpaths.push([]);
+    }
+
+    if (delta == 0) {
+      totalSegs = 0;
+    }
+
+    for(var i = 0; i <= totalSegs; i++)
+    {
+      var f = startAngle + i * delta;
+      this.lineTo(x + Math.cos(f) * radius, y + Math.sin(f) * radius);
+    }
+  }
+
+  _uploadData(graphics) {
+    let webGLData = new WebGLGraphicsData(this.gl, this.primitiveShader);
+
+    // loop through the graphics datas and construct each one..
+    graphics.graphicsData.forEach((data) => {
+      if (data.type === SHAPES.POLY) {
+        buildPoly(data, webGLData);
+      }
+      if (data.type === SHAPES.RECT) {
+        buildRectangle(data, webGLData);
+      }
+    })
 
     // upload vertices and indexes
     webGLData.upload();
+    // pixi provides this weird untyped object
+    graphics._webGL = { data: [webGLData] };
+    this._children.push(graphics);
+  }
 
-    // bind shader
-    gl.useProgram(this.primitiveShader.program);
-    // this one is a bit wicked, they use setters to mask GL uniform calls
-    //shader.uniforms.projectionMatrix = this._activeRenderTarget.projectionMatrix.toArray(true);
+  _render() {
+    const gl = this.gl;
+    
+    gl.clearColor(0, 0, 0, 0); // rgba - black
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    var shaderTemp = webGLData.shader;
+    this.primitiveShader.bind();
+    this.primitiveShader.uniforms.projectionMatrix = this.projectionMatrix.toArray(true);
 
-    //renderer.bindShader(shaderTemp);
-    shaderTemp.bind();
-    shaderTemp.uniforms.projectionMatrix = this.projectionMatrix.toArray(true);
-    //shaderTemp.uniforms.projectionMatrix = new Float32Array([0.0078125,0,0,0,-0.0078125,0,-1,1,1]);
-    graphics.transform.updateTransform(new Transform());
-    shaderTemp.uniforms.translationMatrix = graphics.transform.worldTransform.toArray(true);
-    //shaderTemp.uniforms.translationMatrix = new Float32Array([1,0,0,0,1,0,171,170,1]);
-    shaderTemp.uniforms.tint = utils.hex2rgb(graphics.tint);
-    shaderTemp.uniforms.alpha = 1; // graphics.worldAlpha;
+    this._children.forEach((graphics) => {
+      let webGLData = graphics._webGL.data[0];
 
-    webGLData.vao.bind()
-    .draw(gl.TRIANGLE_STRIP,  webGLData.indices.length)
-    .unbind();
+      this.primitiveShader.uniforms.translationMatrix = graphics.transform.worldTransform.toArray(true);
+      this.primitiveShader.uniforms.tint = utils.hex2rgb(graphics.tint);
+      this.primitiveShader.uniforms.alpha = 1; // graphics.worldAlpha;
+
+      webGLData.vao.bind()
+      .draw(gl.TRIANGLE_STRIP,  webGLData.indices.length)
+      .unbind();
+    })
   }
 }

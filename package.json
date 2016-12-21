@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --require babel-register",
-    "start": "watchify browserTest.js -t babelify -o bundle.js -v&http-server"
+    "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +18,7 @@
     "mocha": "^3.2.0"
   },
   "dependencies": {
+    "earcut": "^2.1.1",
     "parse-color": "^1.0.0"
   }
 }

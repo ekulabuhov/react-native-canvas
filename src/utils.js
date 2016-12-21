@@ -2,7 +2,8 @@ var parse = require('parse-color');
 
 export function cssColor2rgb(cssColor)
 {
-	return parse(cssColor).rgb;
+	var rgb = parse(cssColor).rgb;
+	return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
 }
 
 

@@ -261,6 +261,80 @@ export default class Graphics
     }
 
     /**
+     * Moves the current drawing position to x, y.
+     *
+     * @param {number} x - the X coordinate to move to
+     * @param {number} y - the Y coordinate to move to
+     * @return {PIXI.Graphics} This Graphics object. Good for chaining method calls
+     */
+    moveTo(x, y)
+    {
+        const shape = new Polygon([x, y]);
+
+        shape.closed = false;
+        this.drawShape(shape);
+
+        return this;
+    }
+
+    /**
+     * Draws a line using the current line style from the current drawing position to (x, y);
+     * The current drawing position is then set to (x, y).
+     *
+     * @param {number} x - the X coordinate to draw to
+     * @param {number} y - the Y coordinate to draw to
+     * @return {PIXI.Graphics} This Graphics object. Good for chaining method calls
+     */
+    lineTo(x, y)
+    {
+        this.currentPath.shape.points.push(x, y);
+        this.dirty++;
+
+        return this;
+    }
+
+    /**
+     * Draws a polygon using the given path.
+     *
+     * @param {number[]|PIXI.Point[]} path - The path data used to construct the polygon.
+     * @return {PIXI.Graphics} This Graphics object. Good for chaining method calls
+     */
+    drawPolygon(path)
+    {
+        // prevents an argument assignment deopt
+        // see section 3.1: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+        let points = path;
+
+        let closed = true;
+
+        if (points instanceof Polygon)
+        {
+            closed = points.closed;
+            points = points.points;
+        }
+
+        if (!Array.isArray(points))
+        {
+            // prevents an argument leak deopt
+            // see section 3.2: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+            points = new Array(arguments.length);
+
+            for (let i = 0; i < points.length; ++i)
+            {
+                points[i] = arguments[i]; // eslint-disable-line prefer-rest-params
+            }
+        }
+
+        const shape = new Polygon(points);
+
+        shape.closed = closed;
+
+        this.drawShape(shape);
+
+        return this;
+    }
+
+    /**
      * Specifies a simple one-color fill that subsequent calls to other Graphics methods
      * (such as lineTo() or drawCircle()) use when drawing.
      *

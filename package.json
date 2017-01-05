@@ -1,13 +1,13 @@
 {
   "name": "react-native-canvas",
   "version": "1.0.0",
-  "description": "",
+  "description": "2D canvas (or CanvasRenderingContext2D) implementation using OpenGL",
   "main": "index.js",
   "scripts": {
     "test": "mocha --require babel-register",
     "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server"
   },
-  "author": "",
+  "author": "Eugene Kulabuhov",
   "license": "ISC",
   "devDependencies": {
     "babel-preset-latest": "^6.16.0",
@@ -15,7 +15,8 @@
     "chai": "^3.5.0",
     "gl": "^4.0.2",
     "http-server": "^0.9.0",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "pngjs": "^3.0.0"
   },
   "dependencies": {
     "earcut": "^2.1.1",

@@ -1,6 +1,7 @@
 import CanvasRenderingContext2D from '../src/CanvasRenderingContext2D';
-const assert = require('chai').assert;
-const fs = require('fs');
+const assert = require('chai').assert,
+	fs = require('fs'),
+	PNG = require('pngjs').PNG;
 
 describe('2d.fillRect', function() {
   var gl, ctx;
@@ -17,7 +18,7 @@ describe('2d.fillRect', function() {
   });
 
   it('fillRect red-green gradient', function() {
-    var options = { width: 150, height: 150, fileName: this.test.fullTitle() + '.ppm' };
+    var options = { width: 150, height: 150, fileName: this.test.fullTitle() };
     ({ gl, ctx } = _initContext(options));
 
     for (var i = 0; i < 6; i++) {
@@ -309,6 +310,272 @@ describe('2d.path', function() {
     _assertPixel(gl, 50, 20, 0, 255, 0, 255);
   });
 
+  // arc() draws a full circle when end = start + 2pi-e and clockwise
+  it('2d.path.arc.twopie.2', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.strokeStyle = '#0f0';
+    ctx.lineWidth = 100;
+    ctx.beginPath();
+    ctx.arc(50, 25, 50, 0, 2 * Math.PI - 1e-4, false);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 20, 0, 255, 0, 255);
+  });
+
+  // arc() draws a full circle when end = start + 2pi+e and anticlockwise
+  it('2d.path.arc.twopie.3', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.strokeStyle = '#0f0';
+    ctx.lineWidth = 100;
+    ctx.beginPath();
+    ctx.arc(50, 25, 50, 0, 2 * Math.PI + 1e-4, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 20, 0, 255, 0, 255);
+  });
+
+  // arc() draws nothing when end = start + 2pi+e and clockwise
+  it('2d.path.arc.twopie.4', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.strokeStyle = '#0f0';
+    ctx.lineWidth = 100;
+    ctx.beginPath();
+    ctx.arc(50, 25, 50, 0, 2 * Math.PI + 1e-4, false);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 20, 0, 255, 0, 255);
+  });
+
+  // arc() from 0 to pi does not draw anything in the wrong half
+  it('2d.path.arc.shape.1', function() {
+    ctx.fillStyle = '#0f0';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 50;
+    ctx.strokeStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, Math.PI, false);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 20, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 48, 0, 255, 0, 255);
+  });
+
+  // arc() from 0 to pi draws stuff in the right half
+  it('2d.path.arc.shape.2', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 100;
+    ctx.strokeStyle = '#0f0';
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, Math.PI, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 20, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 48, 0, 255, 0, 255);
+  });
+
+  // arc() from 0 to -pi/2 does not draw anything in the wrong quadrant
+  it('2d.path.arc.shape.3', function() {
+    ctx.fillStyle = '#0f0';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 100;
+    ctx.strokeStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(0, 50, 50, 0, -Math.PI / 2, false);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 48, 0, 255, 0, 255);
+  });
+
+  // arc() from 0 to -pi/2 draws stuff in the right quadrant
+  it('2d.path.arc.shape.4', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 150;
+    ctx.strokeStyle = '#0f0';
+    ctx.beginPath();
+    ctx.arc(-50, 50, 100, 0, -Math.PI / 2, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 48, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 48, 0, 255, 0, 255);
+  });
+
+  // arc() from 0 to 5pi does not draw crazy things
+  it('2d.path.arc.shape.5', function() {
+    ctx.fillStyle = '#0f0';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 200;
+    ctx.strokeStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(300, 0, 100, 0, 5 * Math.PI, false);
+    ctx.stroke();
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 98, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 1, 48, 0, 255, 0, 255);
+
+    _assertPixel(gl, 98, 48, 0, 255, 0, 255);
+  });
+
+  // arc() with lineWidth > 2*radius is drawn sensibly
+  it('2d.path.arc.selfintersect.1', function() {
+    ctx.fillStyle = '#0f0';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 200;
+    ctx.strokeStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(100, 50, 25, 0, -Math.PI / 2, true);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, 25, 0, -Math.PI / 2, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 1, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+  });
+
+  // arc() with lineWidth > 2*radius is drawn sensibly
+  it('2d.path.arc.selfintersect.2', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 180;
+    ctx.strokeStyle = '#0f0';
+    ctx.beginPath();
+    ctx.arc(-50, 50, 25, 0, -Math.PI / 2, true);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(100, 0, 25, 0, -Math.PI / 2, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 90, 10, 0, 255, 0, 255);
+    _assertPixel(gl, 97, 1, 0, 255, 0, 255);
+    _assertPixel(gl, 97, 2, 0, 255, 0, 255);
+    _assertPixel(gl, 97, 3, 0, 255, 0, 255);
+    _assertPixel(gl, 2, 48, 0, 255, 0, 255);
+  });
+
+  // arc() with negative radius throws INDEX_SIZE_ERR
+  it('2d.path.arc.negative', function() {
+    let fn = () => ctx.arc(0, 0, -1, 0, 0, true);
+    assert.throws(fn, /The radius provided (.*) is negative/);
+  });
+
+  // arc() with zero radius draws a line to the start point
+  it('2d.path.arc.zeroradius', function() {
+    ctx.fillStyle = '#f00'
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.lineWidth = 50;
+    ctx.strokeStyle = '#0f0';
+    ctx.beginPath();
+    ctx.moveTo(0, 25);
+    ctx.arc(200, 25, 0, 0, Math.PI, true);
+    ctx.stroke();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+  });
+
+  // arc() with Infinity/NaN is ignored
+  it('2d.path.arc.nonfinite', function() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(100, 0);
+    ctx.arc(Infinity, 0, 50, 0, 2*Math.PI, true);
+    ctx.arc(-Infinity, 0, 50, 0, 2*Math.PI, true);
+    ctx.arc(NaN, 0, 50, 0, 2*Math.PI, true);
+    ctx.arc(0, Infinity, 50, 0, 2*Math.PI, true);
+    ctx.arc(0, -Infinity, 50, 0, 2*Math.PI, true);
+    ctx.arc(0, NaN, 50, 0, 2*Math.PI, true);
+    ctx.arc(0, 0, Infinity, 0, 2*Math.PI, true);
+    ctx.arc(0, 0, -Infinity, 0, 2*Math.PI, true);
+    ctx.arc(0, 0, NaN, 0, 2*Math.PI, true);
+    ctx.arc(0, 0, 50, Infinity, 2*Math.PI, true);
+    ctx.arc(0, 0, 50, -Infinity, 2*Math.PI, true);
+    ctx.arc(0, 0, 50, NaN, 2*Math.PI, true);
+    ctx.arc(0, 0, 50, 0, Infinity, true);
+    ctx.arc(0, 0, 50, 0, -Infinity, true);
+    ctx.arc(0, 0, 50, 0, NaN, true);
+    ctx.arc(Infinity, Infinity, 50, 0, 2*Math.PI, true);
+    ctx.arc(Infinity, Infinity, Infinity, 0, 2*Math.PI, true);
+    ctx.arc(Infinity, Infinity, Infinity, Infinity, 2*Math.PI, true);
+    ctx.arc(Infinity, Infinity, Infinity, Infinity, Infinity, true);
+    ctx.arc(Infinity, Infinity, Infinity, 0, Infinity, true);
+    ctx.arc(Infinity, Infinity, 50, Infinity, 2*Math.PI, true);
+    ctx.arc(Infinity, Infinity, 50, Infinity, Infinity, true);
+    ctx.arc(Infinity, Infinity, 50, 0, Infinity, true);
+    ctx.arc(Infinity, 0, Infinity, 0, 2*Math.PI, true);
+    ctx.arc(Infinity, 0, Infinity, Infinity, 2*Math.PI, true);
+    ctx.arc(Infinity, 0, Infinity, Infinity, Infinity, true);
+    ctx.arc(Infinity, 0, Infinity, 0, Infinity, true);
+    ctx.arc(Infinity, 0, 50, Infinity, 2*Math.PI, true);
+    ctx.arc(Infinity, 0, 50, Infinity, Infinity, true);
+    ctx.arc(Infinity, 0, 50, 0, Infinity, true);
+    ctx.arc(0, Infinity, Infinity, 0, 2*Math.PI, true);
+    ctx.arc(0, Infinity, Infinity, Infinity, 2*Math.PI, true);
+    ctx.arc(0, Infinity, Infinity, Infinity, Infinity, true);
+    ctx.arc(0, Infinity, Infinity, 0, Infinity, true);
+    ctx.arc(0, Infinity, 50, Infinity, 2*Math.PI, true);
+    ctx.arc(0, Infinity, 50, Infinity, Infinity, true);
+    ctx.arc(0, Infinity, 50, 0, Infinity, true);
+    ctx.arc(0, 0, Infinity, Infinity, 2*Math.PI, true);
+    ctx.arc(0, 0, Infinity, Infinity, Infinity, true);
+    ctx.arc(0, 0, Infinity, 0, Infinity, true);
+    ctx.arc(0, 0, 50, Infinity, Infinity, true);
+    ctx.lineTo(100, 50);
+    ctx.lineTo(0, 50);
+    ctx.fillStyle = '#0f0';
+    ctx.fill();
+
+    _assertPixel(gl, 50, 25, 0, 255, 0, 255);
+    _assertPixel(gl, 90, 45, 0, 255, 0, 255);
+  });
+
+  it('MDN arc example', function() {
+    var options = { width: 150, height: 200, fileName: this.test.fullTitle() };
+    ({ gl, ctx } = _initContext(options));
+
+    for (var i=0;i<4;i++) {
+      for(var j=0;j<3;j++) {
+        ctx.beginPath();
+        var x              = 25+j*50;               // x coordinate
+        var y              = 25+i*50;               // y coordinate
+        var radius         = 20;                    // Arc radius
+        var startAngle     = 0;                     // Starting point on circle
+        var endAngle       = Math.PI+(Math.PI*j)/2; // End point on circle
+        var anticlockwise  = i%2==1;                // Draw anticlockwise
+       
+        ctx.arc(x,y,radius,startAngle,endAngle, anticlockwise);
+       
+        if (i>1){
+          ctx.fill();
+        } else {
+          ctx.stroke();
+        }
+      }
+    }
+
+    _assertOutput(gl, options);
+  })
 })
 
 describe('2d.lineWidth', function() {
@@ -357,21 +624,16 @@ describe('2d.lineWidth', function() {
 })
 
 function _assertOutput(gl, { width = 100, height = 50, fileName } = {}) {
-  var data = [];
-  // Write output as a PPM formatted image
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  data.push(['P3\n# gl.ppm\n', width, " ", height, '\n255\n'].join(''))
-  for (var i = 0; i < pixels.length; i += 4) {
-    for (var j = 0; j < 3; ++j) {
-      data.push(pixels[i + j] + ' ')
-    }
-  }
+  
+  fileName += '.png';
+  var pngData = fs.readFileSync(fileName);
+  var expectedData = PNG.sync.read(pngData).data;
 
-  data = data.join('');
+  var compResult = expectedData.compare(Buffer.from(pixels));
 
-  var expectedData = fs.readFileSync(fileName, 'utf8');
-  assert(expectedData == data, 'Output does not match the expected file');
+  assert(compResult == 0, 'Output does not match the expected file');
 }
 
 function _getPixel(gl, x, y) {
@@ -403,22 +665,22 @@ function _initContext(options) {
   return { gl, ctx };
 }
 
-function _dumpAsPPM(gl, fileName, { width = 100, height = 50 } = {}) {
+function _dumpAsPNG(gl, { width = 100, height = 50, fileName } = {}) {
   var data = [];
-  // Write output as a PPM formatted image
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  data.push(['P3\n# gl.ppm\n', width, " ", height, '\n255\n'].join(''))
+  
+  var png = new PNG({
+    width,
+    height,
+    filterType: -1
+  });
+
   for (var i = 0; i < pixels.length; i += 4) {
-    for (var j = 0; j < 3; ++j) {
-      data.push(pixels[i + j] + ' ')
+    for (var j = 0; j < 4; ++j) {
+      png.data[i + j] = pixels[i + j];
     }
   }
 
-  fs.writeFile(fileName, data.join(''), function(err) {
-    if (err) {
-      return console.log(err);
-    }
-    console.log("The file was saved!");
-  });
+  png.pack().pipe(fs.createWriteStream(fileName + '.png'));
 }

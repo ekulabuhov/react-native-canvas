@@ -125,20 +125,20 @@ export default class CanvasRenderingContext2D {
   }
 
   arc(x, y, radius, startAngle, endAngle, anticlockwise) {
+    if (!(isFinite(x) && isFinite(y) && isFinite(radius) && isFinite(startAngle) && isFinite(endAngle))) {
+      return;
+    }
+
+    if (radius < 0) {
+      throw new Error("Failed to execute 'arc' on 'CanvasRenderingContext2D': The radius provided (" + radius + ") is negative.", 'IndexSizeError');
+    }
+
     if (startAngle == endAngle) {
       return;
     }
 
     let totalSegs = Math.floor(30 * Math.sqrt(radius));
-    let fullCircle;
-
-    if ((endAngle > startAngle + 2 * Math.PI) && !anticlockwise) {
-      fullCircle = true;
-    }
-
-    if ((startAngle > endAngle + 2 * Math.PI) && anticlockwise) {
-      fullCircle = true;
-    }
+    let fullCircle = Math.abs(startAngle - endAngle) >= 2 * Math.PI;
 
     // make sure parameters are in range
     startAngle = startAngle % (Math.PI * 2);
@@ -162,7 +162,7 @@ export default class CanvasRenderingContext2D {
       endAngle = 2 * Math.PI - endAngle;
     }
 
-    var delta = Math.abs(endAngle - startAngle) / totalSegs;
+    var delta = Math.abs(endAngle - startAngle) / (totalSegs || 1);
 
     if (anticlockwise) {
       delta = -delta;

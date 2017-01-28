@@ -7,6 +7,7 @@ import { SHAPES } from './const';
 import * as utils from './utils';
 import Matrix from './Matrix';
 import Transform from './Transform';
+import Text from './Text';
 
 export default class CanvasRenderingContext2D {
   constructor(gl, width, height) {
@@ -22,6 +23,12 @@ export default class CanvasRenderingContext2D {
     this._children = [];
 
     this.subpaths = [];
+
+    // Setup text renderer
+    let textureWidth = 256,
+      textureHeight = 256,
+      fontSize = 20;
+    this.text = new Text(gl, textureWidth, textureHeight, width, height, fontSize);    
 
     // Begin Setup
     gl.enable(gl.BLEND)
@@ -43,6 +50,10 @@ export default class CanvasRenderingContext2D {
     this.projectionMatrix = pm;
 
     gl.viewport(0, 0, width, height);
+  }
+
+  fillText(text, x, y) {
+    this.text.render(text, x, y);
   }
 
   // interface CanvasRect

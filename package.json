@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "earcut": "^2.1.1",
-    "parse-color": "^1.0.0"
+    "parse-color": "^1.0.0",
+    "pureimage": "0.0.13"
   }
 }

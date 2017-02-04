@@ -10,7 +10,7 @@ import Transform from './Transform';
 import Text from './Text';
 
 export default class CanvasRenderingContext2D {
-  constructor(gl, width, height) {
+  constructor(gl, width, height, scale = 1) {
     this.primitiveShader = new PrimitiveShader(gl);
     this.gl = gl;
 
@@ -29,6 +29,8 @@ export default class CanvasRenderingContext2D {
       textureHeight = 256,
       fontSize = 20;
     this.text = new Text(gl, textureWidth, textureHeight, width, height, fontSize);    
+
+    Object.defineProperty(this, "fontUrl", { set: (val) => { this.text.fontUrl = val; } });
 
     // Begin Setup
     gl.enable(gl.BLEND)
@@ -49,7 +51,8 @@ export default class CanvasRenderingContext2D {
 
     this.projectionMatrix = pm;
 
-    gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, width * scale, height * scale);
+    requestAnimationFrame(() => { this._render() });
   }
 
   fillText(text, x, y) {
@@ -64,7 +67,6 @@ export default class CanvasRenderingContext2D {
     rectangle.endFill();
 
     this._uploadData(rectangle);
-    this._render();
   }
 
   strokeRect(x, y, width, height) {
@@ -108,7 +110,6 @@ export default class CanvasRenderingContext2D {
     graphics.endFill();
 
     this._uploadData(graphics);
-    this._render();
   }
 
   fill() {
@@ -216,9 +217,6 @@ export default class CanvasRenderingContext2D {
 
   _render() {
     const gl = this.gl;
-    
-    gl.clearColor(0, 0, 0, 0); // rgba - black
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
     this.primitiveShader.bind();
     this.primitiveShader.uniforms.projectionMatrix = this.projectionMatrix.toArray(true);

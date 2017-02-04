@@ -10,8 +10,8 @@ export default class Text {
     this.fontSize = fontSize;
   }
 
-  generateFontTexture(callback) {
-    let fnt = PImage.registerFont('node_modules/pureimage/tests/fonts/SourceSansPro-Regular.ttf', 'Source Sans Pro');
+  generateFontTexture(callback) {    
+    let fnt = PImage.registerFont(this.fontUrl, 'Source Sans Pro');
 
     this.fontLoading = true;
 
@@ -21,14 +21,11 @@ export default class Text {
 
       var img = PImage.make(this.textureWidth, this.textureHeight);
       var ctx = img.getContext('2d');
-      //ctx.fillStyle = 'black';
-      //ctx.fillRect(0, 0, width, height);
+
       ctx.clearRect(0, 0, this.textureWidth, this.textureHeight);
       ctx.mode = 'REPLACE'; // replace is used to disable alpha blending
       ctx.setFont('Source Sans Pro', 20);
       ctx.fillStyle = 'red';
-
-      ctx.USE_FONT_GLYPH_CACHING = false;
 
       var charHeight = 20,
         charWidth = 20,
@@ -38,10 +35,10 @@ export default class Text {
       // https://en.wikipedia.org/wiki/ASCII
       for (var i = 33, x = leftPadding, y = charHeight; i <= 126; i++) {
         // While drawing a glyph - lift it up from it's baseline so it doesn't overflow it's bounding box
-        var glyph = this.font.charToGlyph(String.fromCodePoint(i)),
+        var glyph = this.font.charToGlyph(String.fromCharCode(i)),
           yOffsetFromBaseline = glyph.getMetrics().yMin * this.fontScale;
 
-        ctx.fillText(String.fromCodePoint(i), x, y + yOffsetFromBaseline);
+        ctx.fillText(String.fromCharCode(i), x, y + yOffsetFromBaseline);
         x += charWidth;
         if ((this.textureWidth - x) < charWidth) {
           y += charHeight;
@@ -49,14 +46,13 @@ export default class Text {
         }
       }
 
-      // let text = new Text(gl, textureWidth, textureHeight, canvas.width, canvas.height, fontSize);
       this.initGL();
-      // console.log(fnt);
       this.uploadTexture(img._buffer);
       this.setupTextShaders();
       this.fontLoaded = true;
       this.fontLoading = false;
       callback();
+      //this._drawFontAtlas();
     })
   }
 
@@ -108,7 +104,7 @@ export default class Text {
 
   render(text, x, y) {
     if (!this.fontLoaded && !this.fontLoading) {
-      this.generateFontTexture(() => { 
+      this.generateFontTexture(() => {
         this.pendingRenders.forEach((pr) => { pr() });
       });
     }
@@ -128,24 +124,24 @@ export default class Text {
 
     var fragmentShader = this.compileShader(gl.FRAGMENT_SHADER,
       `varying highp vec2 vTextureCoord;
-	    uniform sampler2D fontAtlas;
+      uniform sampler2D fontAtlas;
 
-	    void main(void) {
-		    gl_FragColor = texture2D(fontAtlas, vec2(vTextureCoord.s, vTextureCoord.t));
-		    // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-		  }`);
+      void main(void) {
+        gl_FragColor = texture2D(fontAtlas, vec2(vTextureCoord.s, vTextureCoord.t));
+        // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      }`);
 
     var vertexShader = this.compileShader(gl.VERTEX_SHADER,
       `attribute vec4 aVertexPosition;
 
-	    uniform mat4 projection;
+      uniform mat4 projection;
 
-	    varying highp vec2 vTextureCoord;
+      varying highp vec2 vTextureCoord;
 
-	    void main(void) {
-	    	gl_Position = projection * vec4(aVertexPosition.xy, 0.0, 1.0);
-	    	vTextureCoord = aVertexPosition.zw;
-	  	}`)
+      void main(void) {
+        gl_Position = projection * vec4(aVertexPosition.xy, 0.0, 1.0);
+        vTextureCoord = aVertexPosition.zw;
+      }`)
 
     let shaderProgram = this.shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
@@ -209,6 +205,28 @@ export default class Text {
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     this.drawScene(str.length * 6);
+  }
+
+  _drawFontAtlas() {
+    let gl = this.gl,
+      scaler = 1,
+      width = this.textureWidth * scaler,
+      height = this.textureHeight * scaler;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
+
+    let vertices = [
+      0, height, 0, 0,
+      0, 0, 0, 1,
+      width, 0, 1, 1,
+
+      0, height, 0, 0,
+      width, 0, 1, 1,
+      width, height, 1, 0
+    ]
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    this.drawScene(6);
   }
 
   drawScene(vertexCount) {

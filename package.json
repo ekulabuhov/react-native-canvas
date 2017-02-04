@@ -2,10 +2,10 @@
   "name": "react-native-canvas",
   "version": "1.0.0",
   "description": "2D canvas (or CanvasRenderingContext2D) implementation using OpenGL",
-  "main": "index.js",
+  "main": "src/CanvasRenderingContext2D.js",
   "scripts": {
     "test": "mocha --require babel-register",
-    "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server"
+    "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server -p 8081"
   },
   "author": "Eugene Kulabuhov",
   "license": "ISC",
@@ -21,6 +21,6 @@
   "dependencies": {
     "earcut": "^2.1.1",
     "parse-color": "^1.0.0",
-    "pureimage": "0.0.13"
+    "pureimage": "git+https://github.com/ekulabuhov/node-pureimage.git"
   }
 }

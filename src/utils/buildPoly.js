@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { cssColor2rgb } from '../utils';
+import { cssColor2rgba } from '../utils';
 import earcut from 'earcut';
 
 /**
@@ -40,8 +40,7 @@ export default function buildPoly(graphicsData, webGLData)
         const length = points.length / 2;
 
         // sort color
-        const color = cssColor2rgb(graphicsData.fillColor);
-        const alpha = graphicsData.fillAlpha;
+        const [alpha, ...color] = cssColor2rgba(graphicsData.fillColor);
         const r = color[0] * alpha;
         const g = color[1] * alpha;
         const b = color[2] * alpha;

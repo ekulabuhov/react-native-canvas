@@ -5,12 +5,19 @@
   "main": "src/CanvasRenderingContext2D.js",
   "scripts": {
     "test": "mocha --require babel-register",
-    "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server -p 8081"
+    "start": "watchify browserTest.js -t babelify -o bundle.js -v --debug&http-server -p 8088"
   },
   "author": "Eugene Kulabuhov",
   "license": "ISC",
+  "browserify": {
+    "transform": [
+      "babelify"
+    ]
+  },
   "devDependencies": {
+    "babel-preset-env": "^1.1.8",
     "babel-preset-latest": "^6.16.0",
+    "babel-preset-react-native": "^1.9.1",
     "babelify": "^7.3.0",
     "chai": "^3.5.0",
     "gl": "^4.0.2",

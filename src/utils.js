@@ -6,6 +6,12 @@ export function cssColor2rgb(cssColor)
 	return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
 }
 
+export function cssColor2rgba(cssColor)
+{
+    var rgb = parse(cssColor).rgba;
+    return [rgb[3], rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
+}
+
 
 /**
  * Converts a hex color number to an [R, G, B] array

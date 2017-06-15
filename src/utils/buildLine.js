@@ -1,5 +1,5 @@
 import Point from '../Point';
-import { cssColor2rgb } from '../utils';
+import { cssColor2rgba } from '../utils';
 
 /**
  * Builds a line to draw
@@ -62,8 +62,8 @@ export default function buildLine(graphicsData, webGLData)
     const width = graphicsData.lineWidth / 2;
 
     // sort color
-    const color = cssColor2rgb(graphicsData.lineColor);
-    const alpha = graphicsData.lineAlpha;
+    const [alpha, ...color] = cssColor2rgba(graphicsData.lineColor);
+
     const r = color[0] * alpha;
     const g = color[1] * alpha;
     const b = color[2] * alpha;

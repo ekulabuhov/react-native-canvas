@@ -27,7 +27,7 @@ export default class CanvasRenderingContext2D {
     // Setup text renderer
     let textureWidth = 256,
       textureHeight = 256,
-      fontSize = 20;
+      fontSize = 12;
     this.text = new Text(gl, textureWidth, textureHeight, width, height, fontSize);    
 
     Object.defineProperty(this, "fontUrl", { set: (val) => { this.text.fontUrl = val; } });
@@ -52,11 +52,22 @@ export default class CanvasRenderingContext2D {
     this.projectionMatrix = pm;
 
     gl.viewport(0, 0, width * scale, height * scale);
-    requestAnimationFrame(() => { this._render() });
   }
 
   fillText(text, x, y) {
     this.text.render(text, x, y);
+  }
+
+  measureText(text) {
+    return this.text.measureText(text);
+  }
+
+  loadFontAsync(fontUrl, callback) {
+    this.text.fontUrl = fontUrl;
+
+    return new Promise((resolve, reject) => {
+      this.text.generateFontTexture(() => resolve());
+    });
   }
 
   // interface CanvasRect
@@ -66,7 +77,8 @@ export default class CanvasRenderingContext2D {
     rectangle.drawRect(x, y, width, height);
     rectangle.endFill();
 
-    this._uploadData(rectangle);
+    this._uploadData(rectangle);   
+    this._render();  
   }
 
   strokeRect(x, y, width, height) {
@@ -74,8 +86,8 @@ export default class CanvasRenderingContext2D {
     rectangle.lineStyle(this.lineWidth, this.strokeStyle);
     rectangle.drawRect(x, y, width, height);
     
-    this._uploadData(rectangle);
-    this._render();
+    this._uploadData(rectangle);       
+    this._render();  
   }
 
   clearRect(x, y, width, height) {
@@ -110,6 +122,7 @@ export default class CanvasRenderingContext2D {
     graphics.endFill();
 
     this._uploadData(graphics);
+    this._render(); 
   }
 
   fill() {
@@ -195,6 +208,26 @@ export default class CanvasRenderingContext2D {
     }
   }
 
+  translate(x, y) {
+    this.text.translate(x, y);
+  }
+
+  save() {
+    // TODO
+  }
+
+  restore() {
+    this.text.translate(0, 0);
+  }
+
+  rotate() {
+    // TODO
+  }
+
+  clip() {
+    // TODO
+  }
+
   _uploadData(graphics) {
     let webGLData = new WebGLGraphicsData(this.gl, this.primitiveShader);
 
@@ -232,5 +265,7 @@ export default class CanvasRenderingContext2D {
       .draw(gl.TRIANGLE_STRIP,  webGLData.indices.length)
       .unbind();
     })
+
+    this._children = [];
   }
 }

@@ -1,3 +1,16 @@
 {
-  "presets": ["latest"]
+	"env": {
+		"browser": {
+		  "presets": [
+		    ["env", {
+		      "targets": {
+		        "chrome": 56
+		      }
+		    }]
+		  ]
+		},
+		"development": {
+		  "presets": ["react-native"]
+		}
+  }
 }

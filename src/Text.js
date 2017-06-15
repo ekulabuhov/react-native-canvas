@@ -8,6 +8,9 @@ export default class Text {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
     this.fontSize = fontSize;
+
+    this.img = PImage.make(this.textureWidth, this.textureHeight);
+    this.ctx = this.img.getContext('2d');
   }
 
   generateFontTexture(callback) {    
@@ -19,12 +22,11 @@ export default class Text {
       this.font = fnt.font;
       this.fontScale = 1 / this.font.unitsPerEm * this.fontSize;
 
-      var img = PImage.make(this.textureWidth, this.textureHeight);
-      var ctx = img.getContext('2d');
+      let { img, ctx } = this;
 
       ctx.clearRect(0, 0, this.textureWidth, this.textureHeight);
       ctx.mode = 'REPLACE'; // replace is used to disable alpha blending
-      ctx.setFont('Source Sans Pro', 20);
+      ctx.setFont('Source Sans Pro', this.fontSize);
       ctx.fillStyle = 'red';
 
       var charHeight = 20,
@@ -56,6 +58,10 @@ export default class Text {
     })
   }
 
+  measureText(text) {
+    return this.ctx.measureText(text);
+  }
+
   initGL() {
     let gl = this.gl;
 
@@ -66,7 +72,7 @@ export default class Text {
 
     // We need to enable blending because our texture is transparent
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   uploadTexture(imageBuffer) {
@@ -135,11 +141,12 @@ export default class Text {
       `attribute vec4 aVertexPosition;
 
       uniform mat4 projection;
+      uniform mat4 view;
 
       varying highp vec2 vTextureCoord;
 
       void main(void) {
-        gl_Position = projection * vec4(aVertexPosition.xy, 0.0, 1.0);
+        gl_Position = projection * view * vec4(aVertexPosition.xy, 0.0, 1.0);
         vTextureCoord = aVertexPosition.zw;
       }`)
 
@@ -160,6 +167,18 @@ export default class Text {
     var pUniform = gl.getUniformLocation(shaderProgram, "projection");
     var projection = this.make2dOrtho(0.0, this.canvasWidth, 0.0, this.canvasHeight);
     gl.uniformMatrix4fv(pUniform, false, new Float32Array(this.flatten(projection)));
+
+    this._viewUniform = gl.getUniformLocation(shaderProgram, "view");
+    // Setup default view matrix
+    this.translate(0, 0);
+  }
+
+  translate(x, y) {
+    let gl = this.gl;
+
+    gl.useProgram(this.shaderProgram);
+    var viewMatrix = this.makeTranslationMatrix(x, -y);
+    gl.uniformMatrix4fv(this._viewUniform, false, new Float32Array(this.flatten(viewMatrix)));
   }
 
   // @param {string} str - The text string to render
@@ -199,7 +218,6 @@ export default class Text {
         xpos + w, ypos + h, xTexPos * charTexWidth + charTexWidth, yTexPos * charTexHeight // top right
       ])
 
-      console.log('advancing:', glyph.advanceWidth * this.fontScale);
       xpos += glyph.advanceWidth * this.fontScale;
     }
 
@@ -232,6 +250,7 @@ export default class Text {
   drawScene(vertexCount) {
     let gl = this.gl;
 
+    gl.useProgram(this.shaderProgram);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.fontAtlasTexture);
     gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "fontAtlas"), 0);
@@ -267,5 +286,14 @@ export default class Text {
       for (var i = 0; i < elements.length; i++)
         result.push(elements[i][j]);
     return result;
+  }
+
+  makeTranslationMatrix(x, y, z = 0) {
+    return [
+      [1, 0, 0, x],
+      [0, 1, 0, y],
+      [0, 0, 1, z],
+      [0, 0, 0, 1]
+    ];
   }
 }

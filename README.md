@@ -5,3 +5,6 @@
 ![2d fillrect fillrect red-green gradient](https://user-images.githubusercontent.com/4452263/27204453-f6516c6e-5233-11e7-9a14-9f3798a3ff58.png)
 <img width="410" alt="chartjs_demo" src="https://user-images.githubusercontent.com/4452263/27204454-f659a172-5233-11e7-9f44-9a1d97aa43c0.png">
 
+## Example projects
+* https://github.com/ekulabuhov/chartjs-expo-test
+* https://github.com/ekulabuhov/chartjs-browser-test

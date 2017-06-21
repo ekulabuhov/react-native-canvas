@@ -627,7 +627,7 @@ function _assertOutput(gl, { width = 100, height = 50, fileName } = {}) {
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
   
-  fileName += '.png';
+  fileName = `./test/assets/${fileName}.png`;
   var pngData = fs.readFileSync(fileName);
   var expectedData = PNG.sync.read(pngData).data;
 

@@ -1,16 +1,19 @@
 {
 	"env": {
 		"browser": {
-		  "presets": [
-		    ["env", {
-		      "targets": {
-		        "chrome": 56
-		      }
-		    }]
-		  ]
+			"presets": [
+			["env", {
+				"targets": {
+				"chrome": 56
+				}
+			}]
+			]
 		},
 		"development": {
-		  "presets": ["react-native"]
+			"presets": ["react-native"]
+		},
+		"test": {
+			"presets": ["react-native"]
 		}
-  }
+	}
 }

@@ -1,4 +1,6 @@
 # react-native-canvas
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/ekulabuhov/react-native-canvas.svg)](https://greenkeeper.io/)
 2D \<canvas\> API ([CanvasRenderingContext2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D)) implementation using OpenGL.
 
 ![2d path mdn arc example](https://user-images.githubusercontent.com/4452263/27204452-f650f892-5233-11e7-9da6-528125502440.png)

@@ -17,7 +17,7 @@
   "devDependencies": {
     "babel-preset-env": "^1.1.8",
     "babel-preset-latest": "^6.16.0",
-    "babel-preset-react-native": "^2.0.0",
+    "babel-preset-react-native": "^3.0.2",
     "babelify": "^7.3.0",
     "chai": "^4.0.2",
     "gl": "^4.0.2",

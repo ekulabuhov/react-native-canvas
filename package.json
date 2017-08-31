@@ -19,7 +19,7 @@
     "babel-preset-latest": "^6.16.0",
     "babel-preset-react-native": "^2.0.0",
     "babelify": "^7.3.0",
-    "chai": "^4.0.2",
+    "chai": "4.1.1",
     "gl": "^4.0.2",
     "http-server": "^0.10.0",
     "mocha": "^3.2.0",

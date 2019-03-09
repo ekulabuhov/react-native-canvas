@@ -23,7 +23,7 @@
     "gl": "^4.0.2",
     "http-server": "^0.10.0",
     "mocha": "^3.2.0",
-    "pngjs": "^3.0.0"
+    "pngjs": "3.3.3"
   },
   "dependencies": {
     "earcut": "^2.1.1",

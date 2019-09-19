@@ -26,7 +26,7 @@
     "pngjs": "^3.0.0"
   },
   "dependencies": {
-    "earcut": "^2.1.1",
+    "earcut": "^2.2.1",
     "parse-color": "^1.0.0",
     "pureimage": "git+https://github.com/ekulabuhov/node-pureimage.git"
   }
